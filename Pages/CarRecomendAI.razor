@@ -1,0 +1,50 @@
+﻿@page "/carRecomend"
+
+<PageTitle>CarRecomend</PageTitle>
+
+<h1>Car Recomend</h1>
+
+<input @bind="topic"></input>
+
+<button @onclick="CarRecomend">Car Recomend</button>
+
+<h3>Car Recomend:</h3>
+<p style="width: 400px; padding: 30px; background-color: #ccc; margin-top: 20px;">@response</p>
+
+
+@using System.Net.Http;
+@using Newtonsoft.Json
+@using System.Text;
+@using System.Net.Http.Headers;
+@inject HttpClient Http;
+@code {
+    string topic = "";
+    string response = "";
+
+    private async Task CarRecomend()
+    {
+        var apiKey = "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";
+        Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+
+        var jsonContent = new
+        {
+            prompt = $"Recomend me car {topic}",
+            model = "text-davinci-003",
+            max_tokens = 1000
+        };
+
+        var responseContent = await Http.PostAsync("https://api.openai.com/v1/completions", new StringContent(JsonConvert.SerializeObject(jsonContent), Encoding.UTF8, "application/json"));
+
+        var resContext = await responseContent.Content.ReadAsStringAsync();
+        var data = JsonConvert.DeserializeObject<dynamic>(resContext);
+        if (data != null && data.choices != null && data.choices.Count > 0)
+        {
+            response = data.choices[0].text;
+            Console.WriteLine(data.choices[0].text);
+        }
+        else
+        {
+            response = "Sorry, we could not generate a car recommendation at this time. Please try again later.";
+        }
+    }
+}
